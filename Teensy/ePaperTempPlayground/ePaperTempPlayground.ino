@@ -7,10 +7,10 @@
 #define MAX_WIDTH    208
 #define MAX_HEIGHT   112
 
-#define MAX_XVAL 60 // min
-#define X_SEGM   6
-#define MIN_YVAL 400  // ° C
-#define MAX_YVAL 2000  // ° C
+#define MAX_XVAL 70 // min
+#define X_SEGM   7
+#define MIN_YVAL 10  // ° C
+#define MAX_YVAL 30  // ° C
 #define Y_SEGM   4
 
 
@@ -21,7 +21,7 @@ float temperature;
  
 const int originX = 30;
 const int originY = 90;
-const int sizeX = 180;
+const int sizeX = 170;
 const int sizeY = 80;
 
 int start_x = 0;
@@ -85,18 +85,6 @@ void drawAxes()
     epaper.setTextWrap( false );
     epaper.println( y_val );
   }
-
-# ifdef HUGO
-  // draw number values
-  for(int i = 0; i < 6; i++)
-  {
-    tft.setCursor((minorSizeX - 30), (number[i] + numberSize));
-    tft.setTextColor(graphColor);
-    tft.setTextSize(1);
-    tft.println(val[i]);
-  }
-#endif
-
 }
 
 
@@ -119,7 +107,7 @@ void loop() {                    // loop function runs forever until power is re
   drawAxes();
   epaper.updateScreen( temperature );                    // update the epaper screen with the buffer contents, passing the current temperature to the epaper screen
     
-  delay( 5000 );                // wait 30 seconds before taking the next measurement
+  delay( 10000 );                // wait 10 seconds before taking the next measurement
 }
 
 #ifdef HUGO
