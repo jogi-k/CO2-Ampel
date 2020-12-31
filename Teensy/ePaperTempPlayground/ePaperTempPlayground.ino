@@ -7,11 +7,11 @@
 #define MAX_WIDTH    208
 #define MAX_HEIGHT   112
 
-#define MAX_XVAL 70 // min
-#define X_SEGM   7
+#define MAX_XVAL 60 // min
+#define X_SEGM   6  // how many "segments" , how often do we want to have markers
 #define MIN_YVAL 10  // ° C
 #define MAX_YVAL 30  // ° C
-#define Y_SEGM   4
+#define Y_SEGM   4   // how many "segments" , how often do we want to have markers, MAX - MIN on Y
 
 
 // initialize epaper with pin numbers for cs, dc, rs, bs for hardware SPI
@@ -19,12 +19,16 @@ EPD215 epaper( 17, 16, 15, 14 );
 
 float temperature;
  
-const int originX = 30;
-const int originY = 90;
-const int sizeX = 170;
-const int sizeY = 80;
+const int originX_coord = 25;
+const int originY_coord = 90;
+const int sizeX_pixel = 180;
+const int sizeY_pixel = 80;
 
-int start_x = 0;
+
+int x_vals[sizeX_pixel]; // we will keep a buffer for the max amount of pixels that can be shown, we also will store ints instead of floats
+int y_vals[sizeX_pixel];  
+
+int start_x = 0;   // this value will float with the time passing by ...
  
 void getTemperature() { //get temperature from temperature sensor
   Wire.beginTransmission( TMP102_I2C_ADDRESS ); // for more details on how to read the temperature from this sensor
@@ -34,7 +38,7 @@ void getTemperature() { //get temperature from temperature sensor
   Wire.endTransmission();
   int val = Wire.read() << 4;
   val |= Wire.read() >> 4;
-  temperature = ( val * 0.0625 ) - 1; // Celsius
+  temperature = ( val * 0.0625 ) ; // Celsius
 
 }
 
@@ -48,26 +52,31 @@ String createTemperatureString( float t ) { // convert temperature value to Stri
   return s;
 }
 
+
+float map_float(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 void drawAxes()
 {
   
   // draw axis iself 
-  epaper.drawLine( originX, originY, (originX + sizeX), originY, 1 );
-  epaper.drawLine((originX + sizeX), originY, (originX + sizeX - 8), originY - 3,  1 );
-  epaper.drawLine((originX + sizeX), originY, (originX + sizeX - 8), originY + 3,  1 );
+  epaper.drawLine( originX_coord, originY_coord, (originX_coord + sizeX_pixel), originY_coord, 1 );
+  epaper.drawLine((originX_coord + sizeX_pixel), originY_coord, (originX_coord + sizeX_pixel - 8), originY_coord - 3,  1 );
+  epaper.drawLine((originX_coord + sizeX_pixel), originY_coord, (originX_coord + sizeX_pixel - 8), originY_coord + 3,  1 );
   
-  epaper.drawLine( originX, originY, originX, (originY - sizeY), 1 );
-  epaper.drawLine( originX, (originY - sizeY), originX - 3, (originY - sizeY + 8), 1 );
-  epaper.drawLine( originX, (originY - sizeY), originX + 3, (originY - sizeY + 8), 1 );
+  epaper.drawLine( originX_coord, originY_coord, originX_coord, (originY_coord - sizeY_pixel), 1 );
+  epaper.drawLine( originX_coord, (originY_coord - sizeY_pixel), originX_coord - 3, (originY_coord - sizeY_pixel + 8), 1 );
+  epaper.drawLine( originX_coord, (originY_coord - sizeY_pixel), originX_coord + 3, (originY_coord - sizeY_pixel + 8), 1 );
 
   // draw xlables
   for(int i = 0; i < X_SEGM; i++)
   {
-    int x_coord = originX + i * sizeX / X_SEGM ;
+    int x_coord = originX_coord + i * sizeX_pixel / X_SEGM ;
     int x_val =  start_x + i * MAX_XVAL / X_SEGM ;
     
-    epaper.drawLine( x_coord, originY-1, x_coord, originY + 5, 1 );
-    epaper.setCursor( x_coord - 5 , originY + 9 );
+    epaper.drawLine( x_coord, originY_coord-1, x_coord, originY_coord + 5, 1 );
+    epaper.setCursor( x_coord - 5 , originY_coord + 9 );
     epaper.setTextSize( 1 );
     epaper.setTextWrap( false );
     epaper.println( x_val );
@@ -76,10 +85,10 @@ void drawAxes()
   // draw ylabels
   for(int i = 0; i < Y_SEGM; i++)
   {
-    int y_coord = originY - i * sizeY / Y_SEGM ;
+    int y_coord = originY_coord - i * sizeY_pixel / Y_SEGM ;
     int y_val = MIN_YVAL + i * ( MAX_YVAL - MIN_YVAL ) / Y_SEGM;
       
-    epaper.drawLine( originX + 1, y_coord, originX -5 , y_coord, 1);
+    epaper.drawLine( originX_coord + 1, y_coord, originX_coord -5 , y_coord, 1);
     epaper.setCursor( 2 , y_coord - 4 );
     epaper.setTextSize( 1 );
     epaper.setTextWrap( false );
@@ -104,10 +113,44 @@ void loop() {                    // loop function runs forever until power is re
   String temp = "T: "  + createTemperatureString( temperature ) + "C" ; // write the current temperature to the epaper screen buffer   
   epaper.setTextSize(2 );
   epaper.println( temp ) ;
+  fillGraph( temperature );
   drawAxes();
+  drawGraph();
   epaper.updateScreen( temperature );                    // update the epaper screen with the buffer contents, passing the current temperature to the epaper screen
     
-  delay( 10000 );                // wait 10 seconds before taking the next measurement
+  delay( 2500 );                // wait 10 seconds before taking the next measurement
+}
+
+int overall_counter = 0; 
+int write_curr_ptr = 0;
+int read_curr_ptr = 0;
+
+
+void drawGraph( void )
+{
+  int temp_read_counter = read_curr_ptr + 1;
+  if ( overall_counter < 2 )
+    return;
+  while(  temp_read_counter <  write_curr_ptr ){
+    epaper.drawLine( x_vals[temp_read_counter -1] + originX_coord, y_vals[temp_read_counter -1],  x_vals[temp_read_counter ] + originX_coord, y_vals[temp_read_counter ] , 1);
+    temp_read_counter++;
+    
+  }
+  
+    
+}
+
+
+void fillGraph( float currtemp)
+{
+  int y_val;
+  int temp_val;
+  x_vals[write_curr_ptr] = overall_counter;
+  
+  y_val = map_float( currtemp, MIN_YVAL, MAX_YVAL, originY_coord , originY_coord -  sizeY_pixel );
+  y_vals[write_curr_ptr] = y_val;
+  write_curr_ptr++ ;
+  overall_counter++;  
 }
 
 #ifdef HUGO
