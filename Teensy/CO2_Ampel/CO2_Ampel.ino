@@ -72,7 +72,7 @@ void loop()
   int digitIndex;
   int color;
   
-  bool blinken = false;
+  bool flashing = false;
 
   if (airSensor.dataAvailable())
   {
@@ -122,19 +122,21 @@ void loop()
     digitIndex = nDigits - 1;
     digitBuffer = mean_co2; // Start with the whole string of numbers
 
-    blinken = false;
+    flashing = false;
     
-    if (mean_co2 > 1500 ){
+    if (mean_co2 >= 1200 ){
       color = 0xFF0000;
-      blinken = true;
+      flashing = true;
     }
-    else if (mean_co2 > 1000 )
+    else if (mean_co2 >= 1000 )
       color = 0xFF0000;
-    else if (mean_co2 > 800 )
+    else if (mean_co2 >= 800 )
       color = 0xFFFF00;
     else 
       color = 0x00FF00; 
     // Display every digit from the sensor reading on appropriate Neosegment Digit
+
+    
     while (digitBuffer > 0)
     {
       int digit = digitBuffer % 10;
@@ -152,7 +154,7 @@ void loop()
     Wire.resetBus();
   }
   delay(1000);
-  if( blinken == true )
+  if( flashing == true )
   {
       neosegment.clearDigit(0);
       neosegment.clearDigit(1);
