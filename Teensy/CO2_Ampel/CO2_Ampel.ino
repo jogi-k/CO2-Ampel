@@ -1,5 +1,5 @@
 /*
-  C02-Ampel for Teensy,
+  C02-Ampel for Teensy LC,
   By Jogi Kuenstner
   Date : 05-Jan-2021
   License : MIT 
@@ -10,7 +10,7 @@
   Date: May 22nd, 2018
   
   
-  Hardware : Teensy LC, Sensirion SC30 Board, Neosegment 
+  Hardware : Teensy LC, Sensirion SC30 Board, 2 pcs Neosegment allowing for 4 numbers 
   
 */
 
@@ -20,56 +20,88 @@
 /* attention: the library was patched to use i2c_t3 the i2c-Library for Teensy 3 / LC instead of wire , see also the provided patch */
 #include "SparkFun_SCD30_Arduino_Library.h" //Click here to get the library: http://librarymanager/All#SparkFun_SCD30
 
-#define nDigits 4
-#define PIN 17 // Teensy LC has 5V especially for Neopixel ONLY on pin 17 
+#define nDigits 4          // 4 Digits build from 2 Neosegments, allowing up to 9999 
+#define PIN 17             // Teensy LC has 5V especially for Neopixel ONLY on pin 17 
 #define BRIGHTNESS 100
 
+#define NEO_COLOR_RED    0xFF0000
+#define NEO_COLOR_YELLOW 0xFFFF00
+#define NEO_COLOR_GREEN  0x00FF00
+
+
+// instantiate the air-sensor
 SCD30 airSensor;
 
+// instantiate the Neosegments
 Neosegment neosegment(nDigits, PIN, BRIGHTNESS);
 
 
 void setup()
 {
-  delay( 5000 );
+  delay( 1000 );
+
   Serial.begin(115200);
   Serial.println("CO2-Ampel");
 
   neosegment.begin();
   neosegment.clearAll();
 
-
   Wire.begin();
  
-  
   if (airSensor.begin() == false)
   {
 
-    neosegment.setDigit(0, 'e', 0xFF0000);
-    delay(50);
-    neosegment.setDigit(1, 'r', 0xFF0000);
-    delay(50);
-    neosegment.setDigit(2, 'r', 0xFF0000);
-     
+    neosegment.setDigit(0, 'e', NEO_COLOR_RED);
+    neosegment.setDigit(1, 'r', NEO_COLOR_RED);
+    neosegment.setDigit(2, 'r', NEO_COLOR_RED);
     Serial.println("Air sensor not detected. Please check wiring. Freezing...");
     while (1)
       ;
   }
-
-  //The SCD30 has data ready every two seconds
 }
+
 
 int mean_array[4];
 int mean_count = 0;
 int mean_co2;
 
+void ShowValueOnNeosegmentDisplay( int value, uint32_t color, bool showLeadingzeros )
+{
+  int digitBuffer;
+  int digitIndex;
+
+  if ( !showLeadingzeros ){
+    // If value is below 1000, make sure the 0-th digit is off
+    if(value  < 1000) {
+      neosegment.clearDigit(0);
+    }
+    // If value is below 100, make sure also the 1-st digits is off
+    if(value   < 100) {
+      neosegment.clearDigit(1);
+    }
+    // If value is below 10, make sure also 2-nd digit ia off
+    if(value     < 10) {
+      neosegment.clearDigit(2);
+    }
+  }
+  digitIndex = nDigits - 1;
+  digitBuffer = value;    // Start with the complete number
+      
+  while (digitBuffer > 0)
+  {
+    int digit = digitBuffer % 10;
+    // Write digit to Neosegment display in color that corresponds to the sensor reading
+    neosegment.setDigit( digitIndex, digit,  color );
+
+    digitBuffer /= 10;
+    digitIndex--;
+  }
+}
 
 void loop()
 {
   
   uint16_t co2_data;
-  int digitBuffer;
-  int digitIndex;
   int color;
   
   bool flashing = false;
@@ -103,24 +135,6 @@ void loop()
       Serial.println( mean_co2 );
       
     }
-    if(mean_co2  < 1000) {
-      neosegment.clearDigit(0);
-    }
-
-    // If the sensor reading is below 100, make sure the 0-th and 1-st digits are off
-    if(mean_co2  < 100) {
-      neosegment.clearDigit(0);
-      neosegment.clearDigit(1);
-    }
-
-    // If the sensor reading is below 100, make sure the 0-th, 1-st and 2-nd digits are off
-    if(mean_co2  < 10) {
-      neosegment.clearDigit(0);
-      neosegment.clearDigit(1);
-      neosegment.clearDigit(2);
-    }
-    digitIndex = nDigits - 1;
-    digitBuffer = mean_co2; // Start with the whole string of numbers
 
     flashing = false;
     
@@ -136,17 +150,7 @@ void loop()
       color = 0x00FF00; 
     // Display every digit from the sensor reading on appropriate Neosegment Digit
 
-    
-    while (digitBuffer > 0)
-    {
-      int digit = digitBuffer % 10;
-      // Write digit to Neosegment display in color that corresponds to the sensor reading
-      neosegment.setDigit( digitIndex, digit,  color );
-
-      digitBuffer /= 10;
-      digitIndex--;
-    }
-
+    ShowValueOnNeosegmentDisplay( mean_co2, color, false );
   }
   else
   {
