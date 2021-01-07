@@ -27,6 +27,7 @@
 #define NEO_COLOR_RED    0xFF0000
 #define NEO_COLOR_YELLOW 0xFFFF00
 #define NEO_COLOR_GREEN  0x00FF00
+#define NEO_COLOR_BLUE   0x0000FF
 
 
 // instantiate the air-sensor
@@ -61,15 +62,11 @@ void setup()
 }
 
 
-int mean_array[4];
-int mean_count = 0;
-int mean_co2;
-
 void ShowValueOnNeosegmentDisplay( int value, uint32_t color, bool showLeadingzeros )
 {
   int digitBuffer;
   int digitIndex;
-
+#ifdef OLD
   if ( !showLeadingzeros ){
     // If value is below 1000, make sure the 0-th digit is off
     if(value  < 1000) {
@@ -84,11 +81,11 @@ void ShowValueOnNeosegmentDisplay( int value, uint32_t color, bool showLeadingze
       neosegment.clearDigit(2);
     }
   }
+#endif
   digitIndex = nDigits - 1;
   digitBuffer = value;    // Start with the complete number
       
-  while (digitBuffer > 0)
-  {
+  while (digitBuffer > 0)  {
     int digit = digitBuffer % 10;
     // Write digit to Neosegment display in color that corresponds to the sensor reading
     neosegment.setDigit( digitIndex, digit,  color );
@@ -96,15 +93,31 @@ void ShowValueOnNeosegmentDisplay( int value, uint32_t color, bool showLeadingze
     digitBuffer /= 10;
     digitIndex--;
   }
+  while ( digitIndex ) {
+    if ( showLeadingzeros ){
+      neosegment.setDigit( digitIndex, 0,  color );
+    }
+    else{
+      neosegment.clearDigit(digitIndex);
+    }
+    digitIndex--;
+  }
 }
+
+
+int color = NEO_COLOR_BLUE ;
+bool flashing = false;
+int mean_co2 = 8888;
+long new_mean_val = 0;
+int mean_count = 0;
+
+
 
 void loop()
 {
   
   uint16_t co2_data;
-  int color;
   
-  bool flashing = false;
 
   if (airSensor.dataAvailable())
   {
@@ -120,50 +133,48 @@ void loop()
 
     Serial.println();
 
-    mean_array[mean_count] = co2_data;
+    new_mean_val += co2_data;
     mean_count++;
     if( mean_count == 4 )
     {
+      mean_co2 = new_mean_val / 4; 
       mean_count = 0;
-      mean_co2 = 0; 
-      for ( int i = 0; i < 4; ++i )
-      {
-        mean_co2 += mean_array[i];
-      }
-      mean_co2 /= 4;
+      new_mean_val = 0;
       Serial.print(" New mean value co2 :");
       Serial.println( mean_co2 );
       
-    }
-
-    flashing = false;
+      flashing = false;
     
-    if (mean_co2 >= 1200 ){
-      color = 0xFF0000;
-      flashing = true;
-    }
-    else if (mean_co2 >= 1000 )
-      color = 0xFF0000;
-    else if (mean_co2 >= 800 )
-      color = 0xFFFF00;
-    else 
-      color = 0x00FF00; 
-    // Display every digit from the sensor reading on appropriate Neosegment Digit
-
-    ShowValueOnNeosegmentDisplay( mean_co2, color, false );
+      if (mean_co2 >= 1200 ){
+        color = NEO_COLOR_RED;
+        flashing = true;
+      }
+      else if (mean_co2 >= 1000 )
+        color = NEO_COLOR_RED;
+      else if (mean_co2 >= 800 )
+        color = NEO_COLOR_YELLOW;
+      else 
+        color = NEO_COLOR_GREEN; 
+     }
   }
   else
   {
     Serial.println("Waiting for new data");
     Wire.resetBus();
   }
-  delay(1000);
-  if( flashing == true )
+  ShowValueOnNeosegmentDisplay( mean_co2, color, false );
+  if (flashing )
   {
-      neosegment.clearDigit(0);
-      neosegment.clearDigit(1);
-      neosegment.clearDigit(2);;
-      neosegment.clearDigit(3);;
+    delay(500);
+    neosegment.clearAll();  
+    delay(500);
+    ShowValueOnNeosegmentDisplay( mean_co2, color, false );
+    delay(500);
+    neosegment.clearAll();  
+    delay(500);
   }
-  delay( 1000 );
+  else
+  {
+    delay(2000);
+  }
 }
