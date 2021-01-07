@@ -12,6 +12,10 @@
 
 ### Breadboard
 
+Die Neosegments gibt es leider nicht in Fritzing.   
+Da die elektrische Verbindung genau gleich wie bei klassischen Neopixel-Sticks ist,   
+wurden diese ersatzweise für den Stromlauf/Layout verwendet.
+
 ![](CO2_Ampel_Teensy_Neosegment_bb.png)
 
 ### Schematics
