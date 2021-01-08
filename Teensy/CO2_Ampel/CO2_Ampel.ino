@@ -61,33 +61,25 @@ void setup()
   }
 }
 
+// Attention, the NeoSegment starts with the highest digit, 
+// meaning (in our case with 4 digits):
+// neosegement.setDigit( 0 ...) adresses the 1000s
+// neosegement.setDigit( 1 ...) adresses the 100s
+// neosegement.setDigit( 2 ...) adresses the 10s
+// and so on
+// therefore we start with the highest neo-digit and write to it the modulo-10-result which is the lowest digit...
 
 void ShowValueOnNeosegmentDisplay( int value, uint32_t color, bool showLeadingzeros )
 {
   int digitBuffer;
   int digitIndex;
-#ifdef OLD
-  if ( !showLeadingzeros ){
-    // If value is below 1000, make sure the 0-th digit is off
-    if(value  < 1000) {
-      neosegment.clearDigit(0);
-    }
-    // If value is below 100, make sure also the 1-st digits is off
-    if(value   < 100) {
-      neosegment.clearDigit(1);
-    }
-    // If value is below 10, make sure also 2-nd digit ia off
-    if(value     < 10) {
-      neosegment.clearDigit(2);
-    }
-  }
-#endif
+
   digitIndex = nDigits ;
   digitBuffer = value;    // Start with the complete number
       
   while (digitBuffer > 0)  {
     int digit = digitBuffer % 10;
-    // Write digit to Neosegment display in color that corresponds to the sensor reading
+    // Write digit to Neosegment display in given color 
     neosegment.setDigit( digitIndex -1, digit,  color );
 
     digitBuffer /= 10;
