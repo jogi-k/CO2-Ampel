@@ -82,23 +82,23 @@ void ShowValueOnNeosegmentDisplay( int value, uint32_t color, bool showLeadingze
     }
   }
 #endif
-  digitIndex = nDigits - 1;
+  digitIndex = nDigits ;
   digitBuffer = value;    // Start with the complete number
       
   while (digitBuffer > 0)  {
     int digit = digitBuffer % 10;
     // Write digit to Neosegment display in color that corresponds to the sensor reading
-    neosegment.setDigit( digitIndex, digit,  color );
+    neosegment.setDigit( digitIndex -1, digit,  color );
 
     digitBuffer /= 10;
     digitIndex--;
   }
   while ( digitIndex ) {
     if ( showLeadingzeros ){
-      neosegment.setDigit( digitIndex, 0,  color );
+      neosegment.setDigit( digitIndex -1, 0,  color );
     }
     else{
-      neosegment.clearDigit(digitIndex);
+      neosegment.clearDigit(digitIndex -1 );
     }
     digitIndex--;
   }
