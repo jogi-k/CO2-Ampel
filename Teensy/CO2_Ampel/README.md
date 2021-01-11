@@ -2,8 +2,9 @@
 
 * Der Sensirion SCD30 CO2-Sensor wird mit I2C angesprochen
 * dafür gibt es eine Library, SparkFun_SCD30_Arduino_Library 
-* diese wurde gepatcht, um mit anstatt mit der wire-I2C-library die besser für Teensy 3 / Teensy LC geeignete i2c_t3 - Library zu verwenden
-* Der gepatchte part der Library ist hier auch abgelegt 
+* diese wurde von mir gepatcht, um mit anstatt mit der wire-I2C-library die besser für Teensy 3 / Teensy LC geeignete i2c_t3 - Library zu verwenden
+* Der Patch ist inzwischen auf dem Master-Branch von Sparkfun
+* Muss jedoch explizit im Headerfile eingeschaltet werden, siehe  // #define USE_TEENSY3_I2C_LIB  
 * Die Anzeige wurde über die (leider nicht mehr verfügbaren) Neo-Segments von crowdsupply realisiert : [https://www.crowdsupply.com/maksmakes/neosegment](https://www.crowdsupply.com/maksmakes/neosegment)
 
 
@@ -26,7 +27,7 @@ wurden diese ersatzweise für den Stromlauf/Layout verwendet.
 ## Fliegender Aufbau
 
 ### Noch im grünen Bereich
- 
+
 ![](ampel2.jpg)
 
 ### Grösser 800 ppm : Gelb
@@ -45,5 +46,15 @@ wurden diese ersatzweise für den Stromlauf/Layout verwendet.
 * Beim Einschalten liegt noch kein Wert vor: es wird 8888 in blau angezeigt
 
  
- 
- 
+
+## Finaler Zusammenbau in Makerbox 
+
+![](ampel3.jpg)
+
+![](ampel4.jpg)
+
+![](ampel5.jpg)
+
+![](ampel6.jpg)
+
+![](ampel7.jpg)
