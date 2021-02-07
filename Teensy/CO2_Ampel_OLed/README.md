@@ -7,3 +7,8 @@
 * zusätzlich ein Mini-OLED-Display, das die ppm-Werte anzeigt
 * Das ist gerade im Aufbau, Einzel-SW-Teile gehen schon
 
+
+## Fritzing 
+
+* kommt bald
+
