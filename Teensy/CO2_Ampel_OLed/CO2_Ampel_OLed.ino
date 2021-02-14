@@ -57,27 +57,50 @@
 
 */
 
-#define U8X8_HAVE_HW_I2C
+#define U8X8_HAVE_HW_I2C_TEENSY3
 #include <U8g2lib.h>
 #include <Adafruit_NeoPixel.h>
 
-#include <Wire.h>
+#include <i2c_t3.h>
+#define USE_TEENSY3_I2C_LIB
+#include "SparkFun_SCD30_Arduino_Library.h" //Click here to get the library: http://librarymanager/All#SparkFun_SCD30
 
 #define PIN 17
 #define AMOUNT_RGB_LEDS  16
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(AMOUNT_RGB_LEDS, PIN, NEO_GRB + NEO_KHZ800);
-
-
 U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C u8g2( U8G2_R0, /* reset=*/20 , /* clock=*/ SCL, /* data=*/ SDA);
+// SCD30 airSensor;
 
 
 void setup(void) {
-  u8g2.begin();
-  u8g2.clearDisplay();    
-  strip.begin();
-  strip.setBrightness( 70 );
-  strip.show();
+    delay( 1000 );
+
+    Serial.begin(115200);
+    Serial.println("CO2-Ampel");
+
+ 
+   // Wire.begin();
+    u8g2.begin();
+    u8g2.clearDisplay();    
+    strip.begin();
+    strip.setBrightness( 70 );
+    strip.show();
+ 
+//    if (airSensor.begin() == false)
+    {
+        Serial.println("Air sensor not detected. Please check wiring. Freezing...");
+        u8g2.clearBuffer();                    // clear the internal memory
+        u8g2.setFont(u8g2_font_fub25_tf);   // choose a suitable font
+        String myString = "ERROR";
+        char myArray[20];
+
+        myString.toCharArray(myArray, 20);
+        u8g2.drawStr(1,26,myArray );    // write something to the internal memory
+        u8g2.sendBuffer();                  // transfer internal memory to the display
+        while (1)
+            ;
+    }
 }
 
 int ppm = 0;
