@@ -44,20 +44,18 @@
 
   --- snap ---
 
-
-
- * Very simple schematics for the RGB-Neopixel: 
- * 
- * +5 V --------------------- LED +5v
- * GND  ----------------------LED GND
- * Pin 17 ------ 330 Ohm ---- LED Data In
+For details of the schematics, please see on the github-Repository:
+https://github.com/jogi-k/CO2-Ampel/tree/main/Teensy/CO2_Ampel_OLed
 
 
 */
 
+
+#define VERSION_STRING "1.0.0"
+
 /* Features of the Hardware => Functionality in SW */
 #define NEOPIXEL_STRIP_CONNECTED
-// #define NEOSEGMENTS_CONNECTED
+// #define NEOSEGMENTS_CONNECTED 
 #define ADAFRUIT_OLED_CONNECTED
 #define ROTARY_BCD_SWITCH_CONNECTED
 
@@ -66,6 +64,8 @@
 #error "Either NEOPIXEL or NEOSEGMENTS, not both can be connected"
 #endif /* NEOSEGMENTS_CONNECTED */
 #endif /* NEOPIXEL_STRIP_CONNECTED  */
+
+#include <i2c_t3.h>
 
 #ifdef NEOPIXEL_STRIP_CONNECTED 
 #include <Adafruit_NeoPixel.h>
@@ -94,11 +94,11 @@
 #define BRIGHTNESS_PER_DIGIT 15  // BCD-Rotary-Coder gives 0..9, Max Brightness is 255. 15 * 9 gives 135, which is really bright already
 
 
-#define PIN 17
+#define RGB_PIN 17
 #define AMOUNT_RGB_LEDS  16
 
 #ifdef NEOPIXEL_STRIP_CONNECTED 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(AMOUNT_RGB_LEDS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(AMOUNT_RGB_LEDS, RGB_PIN, NEO_GRB + NEO_KHZ800);
 #endif /* NEOPIXEL_STRIP_CONNECTED */
 
 #ifdef ADAFRUIT_OLED_CONNECTED
@@ -118,9 +118,8 @@ void setup(void) {
     Serial.begin(115200);
     Serial.println("CO2-Ampel");
 
-#ifndef ADAFRUIT_OLED_CONNECTED     // This makes Wire.begin itself and two times calling is conflicting, why ever ...
-    Wire.begin();
-#endif /* not ADAFRUIT_OLED_CONNECTED */
+    /* Wire1 goes to SCD30, Wire1 has to be initialised before initialising SCD30  */
+    Wire1.begin();
     
     /* The OLED-Display */
 #ifdef  ADAFRUIT_OLED_CONNECTED
@@ -136,8 +135,15 @@ void setup(void) {
 #endif /* NEOPIXEL_STRIP_CONNECTED */
 
     /* The SCD30-Air-Sensor */
-    ShowSmallOnOLED("Sensor Initialise ...", 0 );
-    if (airSensor.begin() == false) 
+    String MyString = "Jogis CO2-Ampel ";
+    MyString.append(VERSION_STRING);
+    ShowSmallOnOLED(MyString, 0 );
+    delay ( 2000 );
+    ShowSmallOnOLED("Sensor Initialise ...", 1 );
+    Serial.println("Sensor Initialise...");
+    Wire1.setClock (100000);
+    delay (2000);
+    if (airSensor.begin( Wire1 ) == false) 
     {
         Serial.println("Air sensor not detected. Please check wiring. Freezing...");
         ShowBigOnOLED("Error 1");
@@ -145,11 +151,13 @@ void setup(void) {
         while (1)
             ;
     }
-    ShowSmallOnOLED("Sensor Reading ...", 1 );
+    ShowSmallOnOLED("Sensor Reading ...", 2 );
+    Serial.println("Sensor Reading..."); 
 }
 
 void loop(void) {
     static int color = 0;
+    static int err_count = 0;
     bool flashing = false; 
     static int mean_ppm = 0;
     
@@ -157,6 +165,19 @@ void loop(void) {
         SerialDebugSensorVals( );
         int curr_ppm = airSensor.getCO2();  
         mean_ppm = CalcNewMeanVal( curr_ppm );
+        err_count = 0;
+    }
+    else {
+        err_count++;
+        if( (err_count % 10 ) == 0 ){
+            Wire1.resetBus();
+        } 
+        if( err_count > 60 ){
+            ShowBigOnOLED("Error 2");
+            showErrorOnStrip();
+            while (1)
+            ;
+        }
     }
     flashing = CalcFlashingAndColor( &color, mean_ppm) ;
     if ( mean_ppm != 8888 ){    
@@ -164,7 +185,7 @@ void loop(void) {
         ShowBigOnOLEDWithFlashing( myString , flashing );
     }
     ShowValueAndFlashOnNeoStripesOrSegments( color, flashing, mean_ppm );
-    delay(100);  
+    delay(500);  
 }
 
 
@@ -173,7 +194,6 @@ int last_millis;
 void ShowValueAndFlashOnNeoStripesOrSegments( int color, bool flashing, int mean_val ){
     int max_led;
     max_led = mean_val / 100;
-
     if (last_mean_val != mean_val ){
         last_mean_val = mean_val;
         last_millis = millis();
@@ -246,20 +266,25 @@ int CalcNewMeanVal( int NewVal ){
 /**************************/
 /* Init */
 void RotaryBCD_Init( void ){
+#ifdef ROTARY_BCD_SWITCH_CONNECTED
     pinMode(0, INPUT_PULLUP);
     pinMode(1, INPUT_PULLUP);
     pinMode(2, INPUT_PULLUP);
     pinMode(3, INPUT_PULLUP);
-
+#endif /* ROTARY_BCD_SWITCH_CONNECTED */
 }
 
 /* Get Value */
 int RotaryBCD_GetVal( void ){
+#ifdef ROTARY_BCD_SWITCH_CONNECTED
     int Value = (!digitalRead(3)) * 8  +
                 (!digitalRead(2)) * 4 +
                 (!digitalRead(1)) * 2 +
                 (!digitalRead(0)) ;
     return Value;
+#else
+    return 5;
+#endif
 }
 
 
