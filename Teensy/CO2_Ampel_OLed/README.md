@@ -13,9 +13,7 @@
 
 ### Fritzing-File
 
-[]: 
-
-
+[CO2_Ampel_Teensy_Neopixel_OLED.fzz](pics/CO2_Ampel_Teensy_Neopixel_OLED.fzz)
 
 ### Breadboard
 
