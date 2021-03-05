@@ -19,14 +19,16 @@ Siehe [hier im Unterverzeichnis Teensy/CO2_Ampel](Teensy/CO2_Ampel/README.md)
 * 4 * 7-Segment-Anzeigen mit Neo-Pixeln, ist also gleichzeitig die Ampel, da die Farben angezeigt werden
 
 
-## System 2 
+## System 2 (ist fertig)
 
-wird vermutlich so aussehen:
+und sieht so aus:
 
 * Teensy LC 
-* 3 Simple LEDs
-* E-Paper-Shield für Teensy
-* evt ein RTC-Breakout-Board für die Grafik-Anzeige mit Zeit ...
+* Neo-Pixel-Ring mit 16 LEDs, pro 100 ppm 1 LED bis max 1699 ppm unterscheidbar, farbkodierte Wertebereiche
+* OLED-Display 0.91" , 128 x 32, für Ausgabe der genauen CO2-Konzentration 
+* Ein BCD-Dreh-Encoder für die Helligkeit der Neopixel-LEDs e Grafik-Anzeige mit Zeit ...
+
+Siehe [hier im Unterverzeichnis Teensy/CO2_Ampel_OLed](Teensy/CO2_Ampel_OLed/README.md)
 
  
 
