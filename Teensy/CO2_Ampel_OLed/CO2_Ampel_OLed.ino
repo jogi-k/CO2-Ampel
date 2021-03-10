@@ -6,7 +6,7 @@
   Built for Teensy LC, but might be changed rather easy to also run on other Arduino-Compatible Boards with support for I2C and NeoPixel (at least one 5V IO-Line)
   
   - Uses an SCD30 Sensirion-Sensor for sensing CO2.
-  - Uses an Adafruit 128x32-Pixel 0.9 something OLED-Display for showing the exact values
+  - Uses an Adafruit 128x32-Pixel 0.91" OLED-Display for showing the exact values
   - Uses an Neo-Pixel-Ring with 16 RGB-Leds, each showing 100ppm.
   - For brightness-setting it reads a BCD-rotary-Encoder with 0-9
 
