@@ -7,6 +7,11 @@
 * Muss jedoch explizit im Headerfile eingeschaltet werden, siehe  // #define USE_TEENSY3_I2C_LIB  
 * Die Anzeige wurde über die (leider nicht mehr verfügbaren) Neo-Segments von crowdsupply realisiert : [https://www.crowdsupply.com/maksmakes/neosegment](https://www.crowdsupply.com/maksmakes/neosegment)
 
+## Das Pinout des SCD30
+
+
+![](SCD30_Pinout.png)
+
 
 ## Layout von Fritzing
 
