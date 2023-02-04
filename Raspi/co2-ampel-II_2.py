@@ -15,7 +15,7 @@ from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculat
 from sensirion_i2c_adapter.i2c_channel import I2cChannel
 from sensirion_i2c_scd30.device import Scd30Device
 
-with LinuxI2cTransceiver('/dev/i2c-1') as i2c_transceiver:
+with LinuxI2cTransceiver('/dev/i2c-0') as i2c_transceiver:
     channel = I2cChannel(I2cConnection(i2c_transceiver),
                          slave_address=0x61,
                          crc=CrcCalculator(8, 0x31, 0xff, 0x0))
