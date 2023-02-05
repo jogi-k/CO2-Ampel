@@ -22,5 +22,9 @@ Moechte nun 2 (besser noch 3) SCD 30 Sensoren mal eine Woche an der frischen Luf
 Der Raspberry Pi hat zwei I2C-Busse eingebaut, der andere (I2C-Bus 0) muss jedoch erst per Config eingeschaltet werden.
 
 Mehr Infos dazu : https://www.woodgears.ca/tech/i2c.html
+Anschluss : ![Bild](i2c_08.jpg)
 
+Fuer den 3ten Sensor habe ich mir einen exteren USB2I2C-Adapter besorgt.  
+Mehr Infos dazu gibt es im Raspberry Pi Geek Magazin:  
+https://www.raspberry-pi-geek.de/ausgaben/rpg/2020/06/i-2-c-teil-31-usb-i-2-c-modul-mcp23017/
 
